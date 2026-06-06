@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory, Billing & Ledger Suite</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    
+    <!-- Login Gateway Overlay -->
+    <div id="login-gateway" class="login-overlay">
+        <div class="login-card glass-panel">
+            <div class="login-header">
+                <div class="login-logo">📁</div>
+                <h2>Inventory & Ledger Suite</h2>
+                <p>Enterprise Business Management Portal</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="e.g. admin" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <div id="login-error" class="error-banner hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Secure Sign In</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </form>
+            <div class="login-footer">
+                <p>Default credentials: <strong>admin</strong>/<strong>admin123</strong> or <strong>client</strong>/<strong>client123</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Container (Hidden until authenticated) -->
+    <div id="app-container" class="hidden">
+        <!-- Top Navigation Header -->
+        <header class="app-header glass-panel">
+            <div class="header-logo">
+                <span class="logo-icon">📊</span>
+                <div class="logo-text">
+                    <h1>InventoryDesk</h1>
+                    <span id="user-badge" class="badge">Role: Admin</span>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-tab active" data-tab="dashboard-panel">📊 Dashboard</button>
+                <button class="nav-tab admin-only" data-tab="catalog-panel">📦 Stock Catalog</button>
+                <button class="nav-tab admin-only" data-tab="invoicing-panel">🧾 Cashier Invoicing</button>
+                <button class="nav-tab admin-only" data-tab="invoices-panel">📄 Invoice Registry</button>
+                <button class="nav-tab admin-only" data-tab="suppliers-panel">🚚 Suppliers Master</button>
+                <button class="nav-tab" data-tab="ledger-panel" id="ledger-tab-btn">📖 Party Ledgers</button>
+                <button class="nav-tab admin-only" data-tab="collections-panel">💰 Payments & Receipts</button>
+                <button class="nav-tab admin-only" data-tab="reports-panel">📈 Reports & Analytics</button>
+            </nav>
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn btn-secondary">🌙 Dark Mode</button>
+                <button id="logout-btn" class="btn btn-danger">🚪 Sign Out</button>
+            </div>
+        </header>
+
+        <!-- Status Notification Banner -->
+        <div id="status-bar" class="status-banner">
+            <span class="status-indicator"></span>
+            <span id="status-message">Real-time data synchronization complete.</span>
+        </div>
+
+        <!-- Central Work Area -->
+        <main class="app-content">
+
+            <!-- 1. DASHBOARD PANEL -->
+            <section id="dashboard-panel" class="tab-panel active">
+                <div class="panel-header">
+                    <h2>Business Overview Dashboard</h2>
+                    <p id="dashboard-subtitle">Real-time indicators & notifications</p>
+                </div>
+                
+                <!-- Deficit Warnings -->
+                <div id="dashboard-deficit-alert" class="alert-box crimson-alert hidden">
+                    <span class="alert-icon">⚠️</span>
+                    <span id="deficit-alert-text">CRITICAL DEFICIT: 0 item(s) are below the low stock threshold!</span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid" id="dashboard-stats-grid">
+                    <!-- Dynamic Stat Cards inserted here -->
+                </div>
+
+                <!-- Table Group -->
+                <div class="content-card glass-panel">
+                    <div class="card-header">
+                        <h3 id="dashboard-table-title">Replenishment Alerts</h3>
+                        <p id="dashboard-table-subtitle">Stock quantities requiring immediate attention</p>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="dashboard-data-table">
+                            <!-- Dynamic Table Head & Body inserted here -->
+                        </table>
+                    </div>
+                    <div class="card-footer hidden" id="dashboard-print-container">
+                        <button class="btn btn-secondary" id="print-selected-invoice-btn">🖨️ Print Selected Invoice</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. STOCK CATALOG PANEL (ADMIN ONLY) -->
+            <section id="catalog-panel" class="tab-panel admin-only">
+                <div class="panel-header-actions">
+                    <div class="panel-header">
+                        <h2>Stock Catalog</h2>
+                        <p>Track warehouse quantities, categories, and costs</p>
+                    </div>
+                    <button class="btn btn-primary" id="add-stock-btn">+ Add Catalog Item</button>
+                </div>
+                <div class="search-bar-row glass-panel">
+                    <input type="text" id="catalog-search" class="form-control" placeholder="🔍 Search stock by name, SKU, or category...">
+                </div>
+                <div class="content-card glass-panel">
+                    <div class="table-container">
+                        <table class="data-table" id="catalog-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Quantity</th>
+                                    <th>Cost Price</th>
+                                    <th>Selling Price</th>
+                                    <th>Category</th>
+                                    <th>Subcategory</th>
+                                    <th>Supplier</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. CASHIER INVOICING PANEL (ADMIN ONLY) -->
+            <section id="invoicing-panel" class="tab-panel admin-only">
+                <div class="panel-header">
+                    <h2>Cashier Checkout Terminal</h2>
+                    <p>Generate customer invoices and update inventory levels atomically</p>
+                </div>
+                <div class="checkout-layout">
+                    <!-- Left: Form Input -->
+                    <div class="checkout-card glass-panel">
+                        <div class="card-header">
+                            <h3>Add Transaction Item</h3>
+                        </div>
+                        <form id="checkout-add-form">
+                            <div class="form-group">
+                                <label for="checkout-party">Customer Party Name</label>
+                                <select id="checkout-party" class="form-control" required>
+                                    <option value="" disabled selected>Select Customer Account</option>
+                                    <!-- Dynamic Options -->
+                                </select>
+                            </div>
+                            <div class="form-group barcode-group">
+                                <label for="checkout-barcode">Barcode Scanner Input</label>
+                                <input type="text" id="checkout-barcode" class="form-control barcode-entry" placeholder="Scan SKU barcode...">
+                            </div>
+                            <div class="form-group">
+                                <label for="checkout-item">Or Select Product</label>
+                                <select id="checkout-item" class="form-control">
+                                    <option value="" disabled selected>Select Product Catalog</option>
+                                    <!-- Dynamic Options -->
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-6">
+                                    <label for="checkout-qty">Quantity</label>
+                                    <input type="number" id="checkout-qty" class="form-control" min="1" value="1">
+                                </div>
+                                <div class="form-group col-6">
+                                    <label for="checkout-warranty">Warranty Terms</label>
+                                    <select id="checkout-warranty" class="form-control">
+                                        <option value="None">None</option>
+                                        <option value="6 Months">6 Months</option>
+                                        <option value="1 Year">1 Year</option>
+                                        <option value="2 Years">2 Years</option>
+                                        <option value="3 Years">3 Years</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-secondary btn-block">Add to Sales Cart</button>
+                        </form>
+                    </div>
+
+                    <!-- Right: Cart Preview -->
+                    <div class="checkout-card cart-card glass-panel">
+                        <div class="card-header-actions">
+                            <h3>Current Sales Cart</h3>
+                            <button id="clear-cart-btn" class="btn btn-danger btn-sm">🗑️ Clear Cart</button>
+                        </div>
+                        <div class="table-container cart-table-container">
+                            <table class="data-table" id="cart-table">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Item Name</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                        <th>Warranty</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic Cart Items -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="cart-summary-block">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="cart-subtotal">$0.00</span>
+                            </div>
+                            <div class="summary-row grand-total">
+                                <span>Grand Total:</span>
+                                <span id="cart-total">$0.00</span>
+                            </div>
+                            <button id="commit-checkout-btn" class="btn btn-success btn-block btn-lg" disabled>
+                                Commit Invoice Transaction
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. INVOICE REGISTRY PANEL (ADMIN ONLY) -->
+            <section id="invoices-panel" class="tab-panel admin-only">
+                <div class="panel-header">
+                    <h2>Invoice Registry</h2>
+                    <p>Historical archive of all atomic client sales transactions</p>
+                </div>
+                <div class="content-card glass-panel">
+                    <div class="table-container">
+                        <table class="data-table" id="invoices-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice Ref</th>
+                                    <th>Date Issued</th>
+                                    <th>Customer Party</th>
+                                    <th>Item Count</th>
+                                    <th>Invoice Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. SUPPLIERS PANEL (ADMIN ONLY) -->
+            <section id="suppliers-panel" class="tab-panel admin-only">
+                <div class="panel-header-actions">
+                    <div class="panel-header">
+                        <h2>Suppliers Master Database</h2>
+                        <p>Track vendor partnerships and procurement sources</p>
+                    </div>
+                    <button class="btn btn-primary" id="add-supplier-btn">+ Add Supplier Vendor</button>
+                </div>
+                <div class="content-card glass-panel">
+                    <div class="table-container">
+                        <table class="data-table" id="suppliers-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Company Name</th>
+                                    <th>Contact Name</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Business Address</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. PARTY LEDGER PANEL -->
+            <section id="ledger-panel" class="tab-panel">
+                <div class="panel-header">
+                    <h2>Customer & Party Balance Ledgers</h2>
+                    <p>Double-entry accounting journal mapping invoice debits to manual collections</p>
+                </div>
+                <div class="search-bar-row glass-panel" id="ledger-party-selector-row">
+                    <div class="form-group mb-0 flex-grow-1">
+                        <label for="ledger-party-select">Select Ledger Account Profile</label>
+                        <select id="ledger-party-select" class="form-control">
+                            <!-- Dynamic Options -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="stats-grid stats-grid-3 mb-16" id="ledger-stats-grid">
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Accumulated Debits (Purchases)</span>
+                        <span class="stat-value text-indigo" id="ledger-total-debit">$0.00</span>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Accumulated Credits (Payments)</span>
+                        <span class="stat-value text-emerald" id="ledger-total-credit">$0.00</span>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Net Outstanding Balance</span>
+                        <span class="stat-value" id="ledger-net-balance">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="content-card glass-panel">
+                    <div class="card-header">
+                        <h3>Ledger Audit Journal</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="ledger-table">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Ledger Narration</th>
+                                    <th>Debit Amount (+)</th>
+                                    <th>Credit Amount (-)</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. PAYMENTS & RECEIPTS PANEL (ADMIN ONLY) -->
+            <section id="collections-panel" class="tab-panel admin-only">
+                <div class="panel-header">
+                    <h2>Payments & Collection Receipts</h2>
+                    <p>Post manual cash receipts as a credit entry reducing party balances</p>
+                </div>
+                <div class="checkout-layout">
+                    <!-- Left Form -->
+                    <div class="checkout-card glass-panel">
+                        <div class="card-header">
+                            <h3>Record Payment Credit</h3>
+                        </div>
+                        <form id="collection-form">
+                            <div class="form-group">
+                                <label for="collection-party">Select Party Account</label>
+                                <select id="collection-party" class="form-control" required>
+                                    <option value="" disabled selected>Select Account</option>
+                                    <!-- Dynamic Options -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-amount">Payment Amount ($)</label>
+                                <input type="number" id="collection-amount" class="form-control" min="0.01" step="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-desc">Payment Narration / Reference</label>
+                                <input type="text" id="collection-desc" class="form-control" placeholder="e.g. Bank Transfer Ref #9921" required>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block">Post Collection Entry</button>
+                        </form>
+                    </div>
+
+                    <!-- Right Info -->
+                    <div class="checkout-card glass-panel">
+                        <div class="card-header">
+                            <h3>Account Balance Summary</h3>
+                        </div>
+                        <div class="collection-summary-pane">
+                            <p class="select-party-prompt">Please select a customer party on the left to inspect ledger stats.</p>
+                            <div class="summary-details hidden" id="collection-party-details">
+                                <h4 id="collection-party-name">Customer: N/A</h4>
+                                <div class="detail-row">
+                                    <span>Credit limit / Outstandings:</span>
+                                    <span id="collection-outstanding" class="heavy-font">$0.00</span>
+                                </div>
+                                <div class="detail-alert crimson-alert hidden" id="collection-alert-outstanding">
+                                    ⚠️ This account has outstanding receivables requiring collection.
+                                </div>
+                                <div class="detail-alert emerald-alert hidden" id="collection-alert-settled">
+                                    ✓ This account is fully settled.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. REPORTS & ANALYTICS PANEL (ADMIN ONLY) -->
+            <section id="reports-panel" class="tab-panel admin-only">
+                <div class="panel-header">
+                    <h2>Reports & Analytics</h2>
+                    <p>Gross margins, stock asset distributions, and aging balances</p>
+                </div>
+                
+                <!-- Summary Header -->
+                <div class="stats-grid stats-grid-4 mb-24" id="reports-stats-grid">
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Total Sales Revenue</span>
+                        <span id="report-revenue" class="stat-value">$0.00</span>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Cost of Goods Sold (COGS)</span>
+                        <span id="report-cogs" class="stat-value">$0.00</span>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Est. Gross Profit</span>
+                        <span id="report-profit" class="stat-value">$0.00</span>
+                    </div>
+                    <div class="stat-card glass-panel">
+                        <span class="stat-title">Gross Profit Margin</span>
+                        <span id="report-margin" class="stat-value">0.0%</span>
+                    </div>
+                </div>
+
+                <!-- Report Sub-tabs -->
+                <div class="sub-tabs-container glass-panel">
+                    <div class="sub-tabs-header">
+                        <button class="sub-tab active" data-subtab="report-margin-tab">📈 Sales & Profitability</button>
+                        <button class="sub-tab" data-subtab="report-category-tab">📦 Category Distribution</button>
+                        <button class="sub-tab" data-subtab="report-supplier-tab">🚚 Supplier Analysis</button>
+                        <button class="sub-tab" data-subtab="report-aging-tab">⏳ Receivables Aging</button>
+                    </div>
+                    
+                    <div class="sub-tab-content active" id="report-margin-tab">
+                        <div class="table-container">
+                            <table class="data-table" id="report-margin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product SKU</th>
+                                        <th>Product Name</th>
+                                        <th>Sales Count</th>
+                                        <th>Gross Sales</th>
+                                        <th>Est. Gross Profit</th>
+                                    </tr>
+                                </thead>
+                                tbody</tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="sub-tab-content" id="report-category-tab">
+                        <div class="table-container">
+                            <table class="data-table" id="report-category-table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Distinct Products</th>
+                                        <th>Total Stock Units</th>
+                                        <th>Total Asset Value (Cost)</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="sub-tab-content" id="report-supplier-tab">
+                        <div class="table-container">
+                            <table class="data-table" id="report-supplier-table">
+                                <thead>
+                                    <tr>
+                                        <th>Supplier Name</th>
+                                        <th>Distinct Products</th>
+                                        <th>Total Stock Units</th>
+                                        <th>Total Asset Value (Cost)</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="sub-tab-content" id="report-aging-tab">
+                        <div class="table-container">
+                            <table class="data-table" id="report-aging-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer Profile</th>
+                                        <th>Total Debits</th>
+                                        <th>Total Payments</th>
+                                        <th>Outstanding Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL DIALOGUES -->
+
+    <!-- 1. ADD/EDIT STOCK MODAL -->
+    <div id="stock-modal" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <h3 id="stock-modal-title">Add Stock Catalog Item</h3>
+                <button class="close-modal-btn">×</button>
+            </div>
+            <form id="stock-form">
+                <input type="hidden" id="stock-id">
+                <div class="form-group">
+                    <label for="stock-name">Product Name</label>
+                    <input type="text" id="stock-name" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="stock-sku">SKU Code</label>
+                        <input type="text" id="stock-sku" class="form-control" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="stock-qty">Initial Stock Quantity</label>
+                        <input type="number" id="stock-qty" class="form-control" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="stock-purchase">Cost Price ($)</label>
+                        <input type="number" id="stock-purchase" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="stock-selling">Selling Price ($)</label>
+                        <input type="number" id="stock-selling" class="form-control" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="stock-category">Category</label>
+                        <input type="text" id="stock-category" class="form-control" placeholder="e.g. Processors" required>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="stock-subcategory">Subcategory</label>
+                        <input type="text" id="stock-subcategory" class="form-control" placeholder="e.g. Intel">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="stock-supplier">Supplier Vendor</label>
+                    <input type="text" id="stock-supplier" class="form-control" placeholder="e.g. Global Tech Distributors">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-action">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="stock-submit-btn">Save Catalog Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. ADD/EDIT SUPPLIER MODAL -->
+    <div id="supplier-modal" class="modal-overlay hidden">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <h3 id="supplier-modal-title">Add Supplier Vendor</h3>
+                <button class="close-modal-btn">×</button>
+            </div>
+            <form id="supplier-form">
+                <input type="hidden" id="supplier-id">
+                <div class="form-group">
+                    <label for="supplier-company">Company Name</label>
+                    <input type="text" id="supplier-company" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="supplier-contact">Contact Name</label>
+                        <input type="text" id="supplier-contact" class="form-control">
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="supplier-phone">Phone Number</label>
+                        <input type="text" id="supplier-phone" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="supplier-email">Email Address</label>
+                    <input type="email" id="supplier-email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="supplier-address">Business Address</label>
+                    <textarea id="supplier-address" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal-action">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="supplier-submit-btn">Save Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. INVOICE DETAIL & PRINT MODAL -->
+    <div id="invoice-detail-modal" class="modal-overlay hidden">
+        <div class="modal-card invoice-print-modal glass-panel">
+            <div class="modal-header print-modal-header">
+                <h3>Transaction Invoice Bill</h3>
+                <div class="print-actions">
+                    <button class="btn btn-secondary" id="invoice-print-action-btn">🖨️ Print Bill</button>
+                    <button class="close-modal-btn">×</button>
+                </div>
+            </div>
+            <!-- Invoice Render Canvas -->
+            <div class="invoice-print-canvas" id="invoice-print-canvas">
+                <!-- Programmatically generated invoice HTML goes here -->
+            </div>
+            <div class="modal-footer print-modal-footer">
+                <button type="button" class="btn btn-secondary close-modal-action">Close Window</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script File -->
+    <script src="app.js"></script>
+</body>
+</html>
